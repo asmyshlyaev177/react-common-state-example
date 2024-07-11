@@ -4,7 +4,7 @@ import { useCommonState } from './useCommonState';
 import { state as myState } from './state';
 
 export const CompB = () => {
-  const { state } = useCommonState<typeof myState>(myState);
+  const { state } = useCommonState(myState);
 
   return (
     <div>

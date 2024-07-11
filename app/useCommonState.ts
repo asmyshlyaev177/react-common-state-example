@@ -3,19 +3,20 @@ import React from 'react';
 const subscribers: (() => void)[] = [];
 const stateMap = new WeakMap<object, object>();
 
-export function useCommonState<T>(stateObj: T) {
-  const [state, _setState] = React.useState(() => {
-    return stateMap.get(stateObj as object) || stateObj;
+export function useCommonState<T extends object>(stateObj: T) {
+  const [state, _setState] = React.useState<typeof stateObj>(() => {
+    const val = stateMap.get(stateObj) as T;
+    if (!val) {
+      stateMap.set(stateObj, stateObj)
+      return stateObj
+    }
+    return val
   });
 
   React.useInsertionEffect(() => {
-    if (!stateMap.get(stateObj as object)) {
-      stateMap.set(stateObj as object, stateObj as object);
-    }
-
     const cb = () => {
-      const val = stateMap.get(stateObj as object);
-      _setState(val!);
+      const val = stateMap.get(stateObj);
+      _setState(val as T);
     };
 
     subscribers.push(cb);
@@ -26,9 +27,9 @@ export function useCommonState<T>(stateObj: T) {
   }, []);
 
   const setState = React.useCallback((newVal: object) => {
-    stateMap.set(stateObj as object, newVal);
+    stateMap.set(stateObj, newVal);
     subscribers.forEach((sub) => sub());
   }, []);
 
-  return { state: state as T, setState };
+  return { state, setState };
 }
